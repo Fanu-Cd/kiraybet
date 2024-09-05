@@ -1,0 +1,1 @@
+//methods liks saveToLocalStorage
