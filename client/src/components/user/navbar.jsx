@@ -2,6 +2,7 @@ import { Flex } from "antd";
 import { HomeIllustration } from "../../assets/icons/home-illustration";
 import ProfileCard from "./profile-card";
 import NavLink from "./nav-link";
+import LanguageSwitcher from "../../utils/languageswitcher";
 
 const Navbar = () => {
   const links = [
@@ -20,7 +21,8 @@ const Navbar = () => {
           ))}
         </Flex>
       </div>
-      <div className="w-[40%] flex justify-end">
+      <div className="w-[40%] flex items-center justify-end gap-3">
+        <LanguageSwitcher />
         <ProfileCard />
       </div>
     </nav>

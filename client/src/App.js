@@ -1,12 +1,13 @@
 import React from "react";
-import {
-  RouterProvider,
-} from "react-router-dom";
-import { routes } from './routes/routes';
-
+import { RouterProvider } from "react-router-dom";
+import { routes } from "./routes/routes";
+import './utils/i18n'; 
+import LanguageProvider from "./context/language-provider";
 function App() {
   return (
-    <RouterProvider router={routes} />
+    <LanguageProvider>
+      <RouterProvider router={routes} />
+    </LanguageProvider>
   );
 }
 

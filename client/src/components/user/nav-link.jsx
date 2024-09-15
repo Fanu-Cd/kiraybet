@@ -11,10 +11,7 @@ const NavLink = ({ isIcon, icon, title, to }) => {
         <RouterLink
           to={to}
           className={
-            ({ isActive }) =>
-              isActive
-                ? "text-blue-500 font-bold" // Active styles
-                : "text-gray-500" // Inactive styles
+            ({ isActive }) => `${isActive && `!text-teal-500 underline underline-offset-8 font-semibold`}` // Inactive styles
           }
         >
           <Text>{title}</Text>
