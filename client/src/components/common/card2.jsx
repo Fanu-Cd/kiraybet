@@ -1,8 +1,11 @@
 import { Button, Card, Dropdown, Flex, Image, Tag, Typography } from "antd";
 import { FaEllipsisV } from "react-icons/fa";
+import { IoLogOut, IoPersonCircle, IoSettings } from "react-icons/io5";
+import { Link } from "react-router-dom";
 
-const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
+const Card2 = ({ data, menuItems }) => {
   const { title, src, location } = data;
+
   const { Text } = Typography;
   const onClick = () => {};
 
@@ -31,7 +34,7 @@ const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
               </Text>
             </div>
             <div>
-              <Dropdown onOpenChange={onOpenDropDown} menu={{ items: menuItems, onClick }}>
+              <Dropdown menu={{ items:menuItems, onClick }}>
                 <Button
                   onClick={(e) => e.preventDefault()}
                   className="h-[3rem] border-none"
@@ -47,4 +50,4 @@ const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
   );
 };
 
-export default Card1;
+export default Card2;

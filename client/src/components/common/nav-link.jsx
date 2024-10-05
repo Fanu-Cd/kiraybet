@@ -2,11 +2,11 @@ import { Typography } from "antd";
 import { NavLink as RouterLink } from "react-router-dom";
 const { Text } = Typography;
 
-const NavLink = ({ isIcon, icon, title, to }) => {
+const NavLink = ({ isComponent, component, title, to }) => {
   return (
     <div>
-      {isIcon ? (
-        <RouterLink to={to}>{icon}</RouterLink>
+      {isComponent ? (
+        <RouterLink to={to}>{component}</RouterLink>
       ) : (
         <RouterLink
           to={to}

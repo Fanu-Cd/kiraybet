@@ -22,7 +22,7 @@ const RentFilter = () => {
           options={locationOptions}
           value={filters.location}
           onChange={(val) => {
-            setFilters({ ...filters, location: val });
+            setFilters({ ...filters, location: !val ? null : val });
           }}
           style={{ width: "100%" }}
           allowClear
@@ -35,7 +35,7 @@ const RentFilter = () => {
           options={priceRanges}
           value={filters.priceRange}
           onChange={(val) => {
-            setFilters({ ...filters, priceRange: val });
+            setFilters({ ...filters, priceRange: !val ? null : val });
           }}
           style={{ width: "100%" }}
           allowClear
@@ -49,7 +49,7 @@ const RentFilter = () => {
             options={typeOptions}
             value={filters.type}
             onChange={(val) => {
-              setFilters({ ...filters, type: val });
+              setFilters({ ...filters, type: !val ? null : val });
             }}
             allowClear
           />
@@ -58,7 +58,7 @@ const RentFilter = () => {
             options={sizeOptions}
             value={filters.size}
             onChange={(val) => {
-              setFilters({ ...filters, size: val });
+              setFilters({ ...filters, size: !val ? null : val });
             }}
             allowClear
           />
@@ -67,7 +67,7 @@ const RentFilter = () => {
             options={bedOptions}
             value={filters.bed}
             onChange={(val) => {
-              setFilters({ ...filters, bed: val });
+              setFilters({ ...filters, bed: !val ? null : val });
             }}
             allowClear
           />
@@ -81,7 +81,7 @@ const RentFilter = () => {
             options={countOptions}
             value={filters.count}
             onChange={(val) => {
-              setFilters({ ...filters, count: val });
+              setFilters({ ...filters, count: !val ? null : val });
             }}
             style={{ width: "100%" }}
             allowClear

@@ -6,7 +6,7 @@ import { IoSettings } from "react-icons/io5";
 import { IoLogOut } from "react-icons/io5";
 
 const { Text } = Typography;
-const ProfileCard = () => {
+const ProfileCard = ({ userData }) => {
   const onClick = ({ key }) => {
     message.info(`Click on item ${key}`);
   };
@@ -33,7 +33,7 @@ const ProfileCard = () => {
     <Dropdown menu={{ items, onClick }}>
       <Button onClick={(e) => e.preventDefault()} className="h-[3rem]">
         <Space>
-          <Text>Fanuel</Text>
+          <Text>{userData?.fname}</Text>
           <Avatar src={<HomeIllustration />} />
           <DownOutlined />
         </Space>

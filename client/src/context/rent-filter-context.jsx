@@ -1,30 +1,28 @@
 import { t } from "i18next";
 import React, { createContext, useState, useContext } from "react";
+import { subCities } from "../utils/sub-cities";
 
 const FilterContext = createContext();
 export const useFilterContext = () => useContext(FilterContext);
 
 export const FilterProvider = ({ children }) => {
   const [filters, setFilters] = useState({
-    location: "mexico",
-    priceRange: "type2",
-    type: "apartment",
-    size: "type2",
-    bed: "1",
-    count: "any",
+    location: null,
+    priceRange: null,
+    type: null,
+    size: null,
+    bed: null,
+    count: null,
   });
-  const locationOptions = [
-    { label: "Arat Kilo/4ኪሎ", value: "arat_kilo" },
-    { label: "Mexico/ሜክሲኮ", value: "mexico" },
-  ];
+  const locationOptions = subCities;
   const priceRanges = [
     {
       label: `${t("price")} : 10${t("thousand")}-40${t("thousand")}`,
-      value: "type4",
+      value: "min-10-max-40",
     },
     {
       label: `${t("price")} : 40${t("thousand")}-100${t("thousand")}`,
-      value: "type2",
+      value: "min-40-max-100",
     },
   ];
   const typeOptions = [
@@ -32,9 +30,9 @@ export const FilterProvider = ({ children }) => {
     { label: t("apartment"), value: "apartment" },
   ];
   const sizeOptions = [
-    { label: `${t("size")} 2X2`, value: "type1" },
-    { label: `${t("size")} 3X2`, value: "type2" },
-    { label: `${t("size")} 3X4`, value: "type3" },
+    { label: `${t("size")} 2X2`, value: "2X2" },
+    { label: `${t("size")} 3X2`, value: "3X2" },
+    { label: `${t("size")} 3X4`, value: "3X4" },
   ];
   const bedOptions = [
     { label: `1 ${t(`beds`)}`, value: "1" },

@@ -1,7 +1,9 @@
 import {
   Button,
   Col,
+  Empty,
   Flex,
+  message,
   Pagination,
   Row,
   Select,
@@ -11,10 +13,22 @@ import {
 import { useFilterContext } from "../../context/rent-filter-context";
 import Card1 from "../common/card1";
 import MapViewer from "../common/map-viewer";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import useWindowSize from "../../hooks/useWindowSize";
 import { useTranslation } from "react-i18next";
-import { CloseOutlined } from "@ant-design/icons";
+import {
+  ArrowRightOutlined,
+  CloseOutlined,
+  EyeOutlined,
+} from "@ant-design/icons";
+import {
+  getAllHouses,
+  getSavedHouseByUserAndHouseId,
+  saveNewHouse,
+} from "../../services/api";
+import { DataLoader } from "../../pages/common/data-loader";
+import { useSession } from "../../context/session-provider";
+import { FaSave } from "react-icons/fa";
 
 const RentResults = () => {
   const {
@@ -26,61 +40,39 @@ const RentResults = () => {
     priceRanges,
   } = useFilterContext();
   const { Title, Text, Link } = Typography;
-  const homes = [
-    {
-      title: "ባለሁለት መኝታ",
-      price: "3000",
-      location: ["ሜክሲኮ / Mexico", "አዲስ አበባ / Addis Ababa"],
-      src: "https://images.pexels.com/photos/7031405/pexels-photo-7031405.jpeg?auto=compress&cs=tinysrgb&w=600",
-      isNegotiable: true,
-      accommodation: { room: 4, bed: 2, bath: 1 },
-      coordinates: [9.0108, 38.7613],
-    },
-    {
-      title: "ባለሶስት መኝታ",
-      src: "https://images.pexels.com/photos/7031408/pexels-photo-7031408.jpeg?auto=compress&cs=tinysrgb&w=600",
-      price: "4000",
-      isNegotiable: false,
-      location: ["ካሳንቺስ / Kasanchis"],
-      accommodation: { room: 3, bed: 1, bath: 1 },
-      coordinates: [8.9806, 38.7993],
-    },
-    {
-      title: "አፓርትመንት",
-      src: "https://images.pexels.com/photos/7031414/pexels-photo-7031414.jpeg?auto=compress&cs=tinysrgb&w=600",
-      price: "3500",
-      isNegotiable: true,
-      location: ["ኡራኢል / Urael"],
-      accommodation: { room: 6, bed: 3, bath: 2 },
-      coordinates: [9.0364, 38.7613],
-    },
-    {
-      title: "ሙሉ ግቢ",
-      src: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=600",
-      price: "2500",
-      isNegotiable: true,
-      location: ["መገናኛ / Megenagna"],
-      accommodation: { room: 2, bed: 1, bath: 0 },
-      coordinates: [9.0373, 38.7616],
-    },
-    {
-      title: "ባለ አራት ክፍል",
-      src: "https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=600",
-      price: "1750",
-      isNegotiable: true,
-      location: ["ኮዬፈጬ / Koyiefechie"],
-      accommodation: { room: 2, bed: 1, bath: 0 },
-      coordinates: [9.0373, 38.7616],
-    },
-  ];
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 4;
   const startIndex = (currentPage - 1) * PAGE_SIZE;
-  const currentData = homes.slice(startIndex, startIndex + PAGE_SIZE);
   const [mode, setMode] = useState("list");
   const { width } = useWindowSize();
   const isSmallScreen = width < 640;
+  const [homes, setHomes] = useState([]);
+  const [housesData, setHousesData] = useState([]);
+  const [currentData, setCurrentData] = useState([]);
   const { t } = useTranslation();
+
+  const getFinalHousesList = (data) => {
+    const houses = data.map((item, index) => {
+      const { _id, title, price, mediaFilePath, location, isNegotiable } = item;
+      return {
+        _id,
+        key: index,
+        title,
+        price,
+        coordinates: [location.latitude, location.longitude],
+        location: [location.text, "አዲስ አበባ / Addis Ababa"],
+        isNegotiable,
+        src: `http://localhost:3001/${mediaFilePath[0]?.replaceAll("\\", "/")}`,
+      };
+    });
+
+    const currentData = houses.slice(startIndex, startIndex + PAGE_SIZE);
+    setHomes(houses);
+    setCurrentData(currentData);
+    setIsFetchingHouses(false);
+    setRefetch(false);
+  };
+
   const sortOptions = [
     { label: t("latest"), value: "latest" },
     { label: t("oldest"), value: "oldest" },
@@ -93,6 +85,24 @@ const RentResults = () => {
     setCurrentPage(page);
   };
 
+  const [isFetchingHouses, setIsFetchingHouses] = useState(false);
+  const [isFetchingError, setIsFetchingError] = useState(false);
+
+  const [refetch, setRefetch] = useState(false);
+
+  useEffect(() => {
+    setIsFetchingHouses(true);
+    getAllHouses()
+      .then((res) => {
+        getFinalHousesList(res?.data);
+        setHousesData(res?.data);
+      })
+      .catch((err) => {
+        setIsFetchingHouses(false);
+        setIsFetchingError(true);
+      });
+  }, [refetch]);
+
   const resetFilters = () => {
     setFilters({
       location: null,
@@ -102,6 +112,67 @@ const RentResults = () => {
       bed: null,
       count: null,
     });
+  };
+
+  const { session, setSession } = useSession();
+
+  const onSaveHouse = (houseId) => {
+    const data = {
+      houseId,
+      userId: session?._id,
+    };
+    saveNewHouse(data)
+      .then((res) => {
+        message.success("House Saved Successfully");
+      })
+      .catch((err) => {
+        message.error("Error saving House");
+      });
+  };
+
+  const comparePriceWithFilter = (filterPrice, housePrice) => {
+    const finalFilterPrice = {
+      min: Number(filterPrice.split("min-")[1]?.slice(0, 2)) * 1000,
+      max: Number(filterPrice.split("max-")[1]?.slice(0, 2)) * 1000,
+    };
+
+    return Number(
+      Number(housePrice) >= finalFilterPrice.min &&
+        Number(housePrice) <= finalFilterPrice.max
+    );
+  };
+
+  const filterHouses = () => {
+    const filteredHouses = housesData.filter((house) => {
+      const isHouseMatch =
+        (filters.bed ? house.beds === filters.bed : true) &&
+        (filters.count ? house.maxPeople === filters.count : true) &&
+        (filters.size ? house.size === filters.size : true) &&
+        (filters.type ? house.type === filters.type : true) &&
+        (filters.location
+          ? house.location.text
+              .toLowerCase()
+              .includes(filters.location.toLowerCase())
+          : true) &&
+        (filters.price
+          ? comparePriceWithFilter(filters.priceRange, house.price)
+          : true);
+      console.log("mact", isHouseMatch);
+
+      return isHouseMatch;
+    });
+    getFinalHousesList(filteredHouses);
+  };
+
+  const [houseSaveStatus, setHouseSaveStatus] = useState("checking");
+  const checkHouseSaveStatus = (houseId) => {
+    getSavedHouseByUserAndHouseId(session?._id, houseId)
+      .then((res) => {
+        setHouseSaveStatus(res?.data ? "saved" : "none");
+      })
+      .catch((err) => {
+        setHouseSaveStatus("error");
+      });
   };
 
   return (
@@ -145,7 +216,10 @@ const RentResults = () => {
             </Button>
           </Flex>
           <div className="flex justify-between items-center">
-            <Text className="font-bold">12000 {`${t(`homes`)}`}</Text>
+            <Text className="font-bold">
+              {currentData?.length}&nbsp;
+              {currentData?.length === 1 ? t(`home`) : `${t(`homes`)}`}
+            </Text>
             <Flex align="center" justify="end" className="min-w-[60%]" gap={3}>
               <Text className="text-sm">{t("sort")} : </Text>
               <Select style={{ width: "60%" }} value={sortBy}>
@@ -163,20 +237,71 @@ const RentResults = () => {
             </Flex>
           </div>
           <div className="mt-1">
-            <Row gutter={[5, 5]}>
-              {[...currentData].map((home, index) => (
-                <Col span={12} className="min-h-[15rem]">
-                  <Card1 data={home} key={index} />
-                </Col>
-              ))}
-            </Row>
+            {isFetchingHouses ? (
+              <div className="flex justify-center items-center p-10">
+                <DataLoader />
+              </div>
+            ) : isFetchingError ? (
+              "Error!"
+            ) : currentData?.length > 0 ? (
+              <Row gutter={[5, 5]} className="mt-3">
+                {[...currentData].map((house) => (
+                  <Col sm={12} md={6} key={house.key}>
+                    <Card1
+                      data={house}
+                      menuItems={[
+                        {
+                          label: (
+                            <Link href={`./rent/${house._id}`}>
+                              <Button type="link" icon={<EyeOutlined />}>
+                                More
+                              </Button>
+                            </Link>
+                          ),
+                          key: "1",
+                        },
+                        {
+                          label: (
+                            <Button
+                              type="link"
+                              onClick={() => {
+                                onSaveHouse(house._id);
+                              }}
+                              disabled={
+                                houseSaveStatus === "checking" ||
+                                houseSaveStatus === "saved" ||
+                                houseSaveStatus === "error"
+                              }
+                              icon={<FaSave />}
+                            >
+                              Save
+                            </Button>
+                          ),
+                          key: "2",
+                        },
+                      ]}
+                      onOpenDropDown={() => {
+                        checkHouseSaveStatus(house?._id);
+                      }}
+                    />
+                  </Col>
+                ))}
+              </Row>
+            ) : (
+              <Empty description="No Houses" />
+            )}
+
             <div className="w-full flex justify-center items-center mt-1">
-              <Pagination
-                current={currentPage}
-                pageSize={PAGE_SIZE}
-                total={homes.length}
-                onChange={onPageChange}
-              />
+              {!isFetchingError &&
+                !isFetchingHouses &&
+                currentData?.length > 0 && (
+                  <Pagination
+                    current={currentPage}
+                    pageSize={PAGE_SIZE}
+                    total={homes.length}
+                    onChange={onPageChange}
+                  />
+                )}
             </div>
           </div>
         </Col>

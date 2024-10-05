@@ -9,6 +9,7 @@ import { Typography } from "antd";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { ArrowRightOutlined } from "@ant-design/icons";
 import { useTranslation } from "react-i18next";
+import { Link } from "react-router-dom";
 const MapViewer = ({ data }) => {
   const { Text } = Typography;
   let DefaultIcon = L.icon({
@@ -34,8 +35,8 @@ const MapViewer = ({ data }) => {
           position={[item.coordinates[0], item.coordinates[1]]}
         >
           <Popup>
-            <Flex vertical>
-              <Text className="font-bold">{item.title}</Text>
+            <Flex vertical align="center" justify="center">
+              <Text className="font-bold w-full">{item.title}</Text>
               <Flex>
                 <FaMapMarkerAlt color="teal" />
                 {item.location.map(
@@ -47,15 +48,17 @@ const MapViewer = ({ data }) => {
                     }`
                 )}
               </Flex>
-              <Button
-                type="primary"
-                size="small"
-                icon={<ArrowRightOutlined />}
-                iconPosition="end"
-                className="mt-2"
-              >
-                {t("view")}
-              </Button>
+              <Link to={`/me/rent/${item._id}`}>
+                <Button
+                  type="primary"
+                  size="small"
+                  icon={<ArrowRightOutlined />}
+                  iconPosition="end"
+                  className="mt-2"
+                >
+                  {t("view")}
+                </Button>
+              </Link>
             </Flex>
           </Popup>
         </Marker>
