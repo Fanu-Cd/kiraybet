@@ -20,7 +20,7 @@ const io = socketIo(server, {
     credentials: true,
   },
 });
-const socketHandler = require("./routes/socket");
+const socketHandler = require("./services/socket");
 socketHandler(io);
 
 const mongodb_url = process.env.MONGODB_URL;
