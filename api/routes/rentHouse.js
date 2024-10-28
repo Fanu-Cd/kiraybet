@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const RentHouse = require("../models/rentHouse");
+const Rating = require("../models/rating");
 const bcrypt = require("bcrypt");
 const multer = require("multer");
 const fs = require("fs");
@@ -12,6 +13,55 @@ router.get("/get-all", function (req, response, next) {
     response.status(200).json({ data: res });
   });
 });
+
+// Helper function to assign levels
+function assignLevels(data, field) {
+  data.sort((a, b) => b[field] - a[field]);
+  const levels = {};
+  let level = 1;
+  let previousValue = null;
+
+  data.forEach((item, index) => {
+    if (item[field] !== previousValue) {
+      level = index + 1;
+    }
+    levels[item._id] = level;
+    previousValue = item[field];
+  });
+
+  return levels;
+}
+
+router.get(
+  "/get-rent-house-statistics-by-ownerId/:ownerId",
+  async function (req, response, next) {
+    try {
+      const { ownerId } = req.params;
+
+      const housesData = await RentHouse.aggregate([
+        { $group: { _id: "$ownerId", count: { $sum: 1 } } },
+      ]);
+
+      const ratingData = await Rating.aggregate([
+        { $group: { _id: "$ownerId", avgRating: { $avg: "$rating" } } },
+      ]);
+
+      const housesLevels = assignLevels(housesData, "count");
+      const ratingLevels = assignLevels(ratingData, "avgRating");
+
+      const ownerHousesLevel = housesLevels[ownerId] || housesLevels.length;
+      const ownerRatingLevel = ratingLevels[ownerId] || ratingLevels.length;
+
+      response.json({
+        houses: ownerHousesLevel,
+        rating: ownerRatingLevel,
+      });
+    } catch (error) {
+      console.error(error);
+      response.status(500).json({ message: "Server Error" });
+    }
+  }
+);
 
 router.get("/get-by-id/:id", function (req, response, next) {
   const id = req.params.id;
@@ -32,7 +82,7 @@ router.get("/get-by-owner-id/:id", function (req, response, next) {
 
 router.get("/get-by-subcity/:subcity", function (req, response, next) {
   let subcity = req.params.subcity;
-  RentHouse.find({ 'location.text': subcity  }).then((res) => {
+  RentHouse.find({ "location.text": subcity }).then((res) => {
     response.status(200).json({ data: res });
   });
 });
@@ -108,8 +158,16 @@ router.put(
   upload.array("files", 5),
   async function (req, response, next) {
     const houseId = req.params.id;
-    const { title, type, size, beds, maxPeople, price, isNegotiable } =
-      req.body;
+    const {
+      title,
+      type,
+      size,
+      beds,
+      maxPeople,
+      price,
+      isNegotiable,
+      isAvailable,
+    } = req.body;
 
     try {
       let existingHouse = await RentHouse.findById(houseId);
@@ -126,6 +184,8 @@ router.put(
       existingHouse.price = price || existingHouse.price;
       existingHouse.isNegotiable =
         isNegotiable !== undefined ? isNegotiable : existingHouse.isNegotiable;
+      existingHouse.isAvailable =
+        isAvailable !== undefined ? isAvailable : existingHouse.isAvailable;
 
       if (req.files && req.files.length > 0) {
         const uploadedFilesPaths = req.files.map((file) => file.path); //

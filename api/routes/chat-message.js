@@ -101,17 +101,20 @@ router.get("/get-by-instance-id/:id", function (req, response, next) {
 
 router.put("/update/:id", async function (req, response, next) {
   const chatMessageId = req.params.id;
-  const existingChatMessage = ChatInstance.findById(chatMessageId);
-  await ChatInstance.updateOne(
+  const { isRead } = req.body;
+  const existingChatMessage = ChatMessage.findById(chatMessageId);
+  existingChatMessage.isRead = isRead || existingChatMessage.isRead;
+
+  await ChatMessage.updateOne(
     { _id: chatMessageId },
-    { $set: existingChatMessage }
+    { $set: { isRead: existingChatMessage.isRead } }
   );
   response.status(200).send("Successfully updated");
 });
 
 router.delete("/delete/:id", (req, response) => {
   const { id } = req.params;
-  ChatMessage.findOneAndDelete({ _id: id })
+  ChatMessage.findOneAndUpdate({ _id: id }, { isDeleted: true })
     .then((res) => {
       response.status(200).send("Deleted Successfully");
     })

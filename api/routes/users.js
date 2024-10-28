@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const User = require("../models/user");
 const bcrypt = require("bcrypt");
-const { sendEmail } = require("../services/email");
+// const { sendEmail } = require("../services/email");
 
 const hashPassword = async (password) => {
   const saltRounds = 10;
@@ -59,22 +59,22 @@ router.post("/create-new", async function (req, response, next) {
     });
 });
 
-router.post(
-  "/send-verification-email/:email",
-  async function (req, response, next) {
-    const { email } = req.params;
-    console.log("email", email);
+// router.post(
+//   "/send-verification-email/:email",
+//   async function (req, response, next) {
+//     const { email } = req.params;
+//     console.log("email", email);
 
-    const { code } = req.body;
-    const subject = "Email Verification";
-    const text = "This is your code : " + code;
-    const result = await sendEmail(email, subject, text);
-    if (result.success) {
-      return response.status(200).send("Email Sent");
-    } else {
-      return response.status(400).send("Some Error Occurred");
-    }
-  }
-);
+//     const { code } = req.body;
+//     const subject = "Email Verification";
+//     const text = "This is your code : " + code;
+//     const result = await sendEmail(email, subject, text);
+//     if (result.success) {
+//       return response.status(200).send("Email Sent");
+//     } else {
+//       return response.status(400).send("Some Error Occurred");
+//     }
+//   }
+// );
 
 module.exports = router;

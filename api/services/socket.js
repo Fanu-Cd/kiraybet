@@ -5,6 +5,14 @@ module.exports = function (io) {
   io.on("connection", (socket) => {
     console.log("New client connected");
 
+    socket.on("messageDeleted", (chatId) => {
+      socket.broadcast.emit("messageDeleted", { chatId });
+    });
+
+    socket.on("messageRead", ({ chatId }) => {
+      socket.broadcast.emit("messageRead", { chatId });
+    });
+
     socket.on("joinChat", ({ userId }) => {
       console.log("new client joined chat");
 
@@ -15,13 +23,15 @@ module.exports = function (io) {
 
     socket.on(
       "sendMessage",
-      ({ chatInstanceId, senderId, receiverId, message }) => {
-        const { text } = message;
+      ({ chatInstanceId, senderId, receiverId, message, isReply, replyTo }) => {
+        const { text, isText, mediaFilePath } = message;
         const newMessage = new ChatMessage({
           chatInstanceId,
           senderId,
           receiverId,
-          message: { text },
+          message: { text, isText, mediaFilePath },
+          isReply: isReply || false,
+          replyTo,
         });
 
         newMessage.save().then((res) => {
@@ -29,6 +39,14 @@ module.exports = function (io) {
         });
       }
     );
+
+    socket.on("typing", ({ senderId, receiverId }) => {
+      io.emit("displayTyping", { senderId, receiverId });
+    });
+
+    socket.on("stopTyping", ({ senderId, receiverId }) => {
+      io.emit("hideTyping", { senderId, receiverId });
+    });
 
     socket.on("disconnect", () => {
       console.log("Client disconnected");

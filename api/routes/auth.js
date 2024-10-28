@@ -9,6 +9,7 @@ router.post("/login", async function (req, response, next) {
 
   if (!user) {
     response.status(400).send("User Not Found");
+    return;
   }
 
   const match = await bcrypt.compare(pass, user.password);

@@ -28,6 +28,18 @@ const chatMessageSchema = new mongoose.Schema(
       isFile: Boolean,
       mediaFilePath: [String],
     },
+    isRead: {
+      type: Boolean,
+      default: false,
+    },
+    isReply: {
+      type: Boolean,
+      default: false,
+    },
+    replyTo: {
+      type: mongoose.Types.ObjectId,
+      ref: "Chat-Message",
+    },
   },
   { timestamps: true }
 );
