@@ -20,6 +20,7 @@ import { useNavigate } from "react-router-dom";
 import { useSession } from "../../context/session-provider";
 import { IoMailOpenOutline } from "react-icons/io5";
 import useWindowSize from "../../hooks/useWindowSize";
+import { MdReportProblem } from "react-icons/md";
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 const OwnerLayout = () => {
@@ -54,14 +55,14 @@ const OwnerLayout = () => {
         router("./chats");
       },
     },
-    // {
-    //   key: "4",
-    //   icon: <SearchOutlined />,
-    //   label: "Discover",
-    //   onClick: () => {
-    //     router("./discover");
-    //   },
-    // },
+    {
+      key: "4",
+      icon: <MdReportProblem />,
+      label: "Complaints",
+      onClick: () => {
+        router("./complaints");
+      },
+    },
   ];
 
   const [selectedKey, setSelectedKey] = useState(["0"]);
@@ -80,11 +81,11 @@ const OwnerLayout = () => {
     if (window.location.pathname.includes("/owner/dashboard")) {
       return "Dashboard";
     }
-    // if (window.location.pathname.includes("/owner/discover")) {
-    //   return "Discover";
-    // }
     if (window.location.pathname.includes("/owner/chats")) {
       return "Chats";
+    }
+    if (window.location.pathname.includes("/owner/complaints")) {
+      return "Complaints";
     }
     return null;
   };

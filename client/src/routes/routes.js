@@ -20,6 +20,8 @@ import RentHouse from "../pages/user/rent-house";
 import Chats from "../pages/common/chat/chats";
 import Chat from "../pages/common/chat/chat";
 import SavedHouses from "../pages/user/saved-houses";
+import Complaints from "../pages/owner/complaints";
+import MyComplaints from "../pages/user/my-complaints";
 
 export const routes = (userType) => {
   return createBrowserRouter([
@@ -104,15 +106,14 @@ export const routes = (userType) => {
           ],
         },
         {
-          path: "mortgage",
+          path: "my-complaints",
           element: (
             <Suspense fallback={<Loader />}>
-              <UserDashboard />
+              <MyComplaints />
             </Suspense>
           ),
         },
       ],
-      // loader
     },
 
     {
@@ -157,14 +158,14 @@ export const routes = (userType) => {
             </Suspense>
           ),
         },
-        // {
-        //   path: "discover",
-        //   element: (
-        //     <Suspense fallback={<Loader />}>
-        //       <Discover />
-        //     </Suspense>
-        //   ),
-        // },
+        {
+          path: "complaints",
+          element: (
+            <Suspense fallback={<Loader />}>
+              <Complaints />
+            </Suspense>
+          ),
+        },
         {
           path: "chats",
           element: (

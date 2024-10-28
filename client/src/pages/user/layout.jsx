@@ -8,7 +8,7 @@ const UserLayout = () => {
     { title: "Rent", to: "/me/rent" },
     { title: "Saved", to: "/me/saved" },
     { title: "Chat", to: "/me/chats" },
-    { title: "Complaints", to: "/me/complaint" },
+    { title: "My Complaints", to: "/me/my-complaints" },
   ];
   const { session, setSession } = useSession();
   const onLogout = () => {
