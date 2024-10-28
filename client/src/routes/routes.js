@@ -7,7 +7,6 @@ import Loader from "../components/common/loader";
 import ErrorPage from "../pages/common/errorpage";
 import UserLayout from "../pages/user/layout";
 import UserDashboard from "../pages/user/dashboard";
-import MyHouses from "../pages/user/my-houses";
 import Rent from "../pages/user/rent";
 import OwnerLayout from "../pages/owner/layout";
 import OwnerDashboard from "../pages/owner/dashboard";
@@ -52,14 +51,6 @@ export const routes = (userType) => {
           element: (
             <Suspense fallback={<Loader />}>
               <UserDashboard />
-            </Suspense>
-          ),
-        },
-        {
-          path: "my-houses",
-          element: (
-            <Suspense fallback={<Loader />}>
-              <MyHouses />
             </Suspense>
           ),
         },

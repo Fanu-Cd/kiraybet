@@ -1,7 +1,6 @@
 import React, { useRef, useEffect, useState } from "react";
 import mapboxgl from "mapbox-gl";
 import "mapbox-gl/dist/mapbox-gl.css";
-mapboxgl.accessToken = "uIDEnHqIVetWK5zuULr6"; // Replace with your MapTiler API key
 
 const MapLocator = ({ onLocationSelect }) => {
   const mapContainerRef = useRef(null);

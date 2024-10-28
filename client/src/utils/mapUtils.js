@@ -1,5 +1,4 @@
 import mapboxgl from "mapbox-gl";
-mapboxgl.accessToken = "uIDEnHqIVetWK5zuULr6"; // Replace with your MapTiler API key
 
 export async function getLocationByCoordinates(coord) {
   const { latitude, longitude } = coord;

@@ -36,7 +36,6 @@ mongoose
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
 const authRouter = require("./routes/auth");
-const commonRouter = require("./routes/common");
 const rentHouseRouter = require("./routes/rentHouse");
 const chatInstanceRouter = require("./routes/chat-instance");
 const chatMessageRouter = require("./routes/chat-message");
@@ -58,7 +57,6 @@ app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 //routes
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
-app.use("/common", commonRouter);
 app.use("/auth", authRouter);
 app.use("/rent-house", rentHouseRouter);
 app.use("/chat-instance", chatInstanceRouter);
