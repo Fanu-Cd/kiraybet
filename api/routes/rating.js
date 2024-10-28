@@ -26,7 +26,6 @@ router.post("/create-new", async function (req, response, next) {
     0
   );
   const newRating = new Rating({ userId, ownerId, houseId, value });
-  const house = await RentHouse.findById(houseId);
   const newTotalRating = (totalOldRatings + value) / (otherRatings?.length + 1);
 
   newRating
