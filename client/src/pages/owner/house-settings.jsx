@@ -17,39 +17,40 @@ import {
   List,
   message,
   Modal,
+  notification,
   Popconfirm,
   Row,
   Select,
   Spin,
+  Switch,
   Tabs,
   Typography,
 } from "antd";
 import {
-  AppleOutlined,
-  AndroidOutlined,
   HomeOutlined,
   PictureOutlined,
-  HeatMapOutlined,
   DeleteOutlined,
   LoadingOutlined,
   SaveOutlined,
-  SaveFilled,
+  CheckCircleOutlined,
+  EnvironmentOutlined,
 } from "@ant-design/icons";
 import * as Yup from "yup";
 import { useTranslation } from "react-i18next";
 import { useForm } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import FileUploader from "../../components/common/file-uploader";
-import { FaMapMarker, FaMapMarkerAlt, FaMapPin } from "react-icons/fa";
+import { FaMapMarkerAlt } from "react-icons/fa";
 import MapLocator from "../../components/common/map-locator";
 import { useNavigate } from "react-router-dom";
+import useWindowSize from "../../hooks/useWindowSize";
 const HouseSettings = () => {
   const { id } = useParams();
   const router = useNavigate();
   const [isFetching, setIsFetching] = useState(false);
   const [files, setFiles] = useState([]);
   const [hasChanges, setHasChanges] = useState(false); //use this to track changes
-
+  const [isAvailable, setIsAvailable] = useState(false);
   const getHouseData = () => {
     setIsFetching(true);
 
@@ -85,6 +86,7 @@ const HouseSettings = () => {
         setBasicInfoValue("isNegotiable", isNegotiable);
         setIsFetching(false);
         setBasicInput({ ...basicInput, id: res?.data?._id });
+        setIsAvailable(res?.data?.isAvailable);
       })
       .catch((err) => {
         message.error("cant fech data");
@@ -103,21 +105,22 @@ const HouseSettings = () => {
   const [activeKey, setActiveKey] = useState(1);
 
   const basicInfoValidationSchema = Yup.object().shape({
-    name: Yup.string().required("Name is required"),
+    name: Yup.string()
+      .required("Name is required")
+      .min(5, "Please Enter at least five characters"),
     size: Yup.string().required("Size is required"),
     type: Yup.string().required("Type is required"),
     price: Yup.number().required("Price is required"),
     beds: Yup.string().required("Beds is required"),
-    count: Yup.string().required("Count is required"),
+    count: Yup.string().required("Amount of people is required"),
   });
 
   const {
     handleSubmit: handleBasicInfoSubmit,
     setValue: setBasicInfoValue,
     getValues,
-    register,
     watch,
-    reset: resetBasicInfo,
+    reset,
     formState: { errors: basicInfoErrors, isValid: isBasicInfoValid },
   } = useForm({
     resolver: yupResolver(basicInfoValidationSchema),
@@ -163,14 +166,6 @@ const HouseSettings = () => {
   const [isUploadError, setIsUploadError] = useState(false);
 
   const isEmptyObject = (obj) => {
-    console.log(
-      "aa",
-      obj &&
-        typeof obj === "object" &&
-        !Array.isArray(obj) &&
-        Object.keys(obj).length === 0
-    );
-
     return (
       obj &&
       typeof obj === "object" &&
@@ -180,26 +175,18 @@ const HouseSettings = () => {
   };
 
   const onDelete = (file) => {
-    console.log("file", file);
     deleteRentHouseMedia(basicInput.id, file.src?.split("rent-houses/")[1])
       .then((res) => {
-        console.log("ress", res);
-        message.success("File Deleted Successfully");
+        notification.success({ message: "File Successfully Removed" });
         getHouseData();
       })
       .catch((err) => {
-        console.log("err", err);
+        notification.error({ message: "Error deleting file" });
       });
   };
 
-  useEffect(() => {
-    console.log("basicInfoErrors", basicInfoErrors);
-  }, [basicInfoErrors]);
-
   const onSave = () => {
     if (isEmptyObject(basicInfoErrors)) {
-      console.log("files", files);
-
       if (files?.length === 0 && fileList?.length === 0) {
         setIsUploadError(true);
         setActiveKey(2);
@@ -236,6 +223,7 @@ const HouseSettings = () => {
     formData.append("price", data.price);
     formData.append("beds", data.beds);
     formData.append("isNegotiable", data.isNegotiable);
+    formData.append("isAvailable", isAvailable);
     formData.append("maxPeople", data.count);
     formData.append("size", data.size);
     formData.append("type", data.type);
@@ -248,27 +236,27 @@ const HouseSettings = () => {
       })
     );
     fileList.forEach((file) => {
-      formData.append("files", file.originFileObj); // Append the actual file (originFileObj) to FormData
+      formData.append("files", file.originFileObj);
     });
     return formData;
   };
 
   const updateHouse = () => {
-    console.log("basicinp", basicInput);
-    console.log("locc", location);
-    console.log("filelist", fileList);
-
     const data = getFinalData(basicInput);
     updateHouseById(basicInput.id, data)
       .then((res) => {
-        message.success("House Successfully posted!");
+        notification.success({ message: "House Successfully updated!" });
         router("/owner/my-houses");
       })
       .catch((err) => {
-        console.log("err", err);
+        notification.error({ message: "Couldn't Update House!" });
       });
-    console.log("data", data);
   };
+
+  const { width } = useWindowSize();
+  const isSmallScreen = width < 1000;
+  const isSmallerScreen = width < 600;
+  const isSmallestScreen = width < 400;
 
   const tabItems = [
     {
@@ -278,7 +266,7 @@ const HouseSettings = () => {
       children: (
         <Flex vertical className="p-5">
           <Row className="w-full h-full" gutter={[10, 10]}>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Title</label>
               <Input
                 onChange={(e) => {
@@ -288,8 +276,13 @@ const HouseSettings = () => {
                 placeholder="Give your house some title"
                 value={watch("name")}
               />
+              {basicInfoErrors.name && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.name.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Type</label>
               <Select
                 options={typeOptions}
@@ -300,8 +293,13 @@ const HouseSettings = () => {
                 placeholder="Is your house a studio or apartment"
                 value={watch("type")}
               />
+              {basicInfoErrors.type && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.type.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Size</label>
               <Select
                 options={sizeOptions}
@@ -312,8 +310,13 @@ const HouseSettings = () => {
                 placeholder="What is the size of your house?"
                 value={watch("size")}
               />
+              {basicInfoErrors.size && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.size.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Beds</label>
               <Select
                 options={bedOptions}
@@ -324,8 +327,13 @@ const HouseSettings = () => {
                 placeholder="How many beds does your house have?"
                 value={watch("beds")}
               />
+              {basicInfoErrors.beds && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.beds.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Price (ETB)</label>
               <InputNumber
                 min={1}
@@ -337,6 +345,11 @@ const HouseSettings = () => {
                 placeholder="What is payment expected for the rent?"
                 value={watch("price")}
               />
+              {basicInfoErrors.price && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.price.message}
+                </Text>
+              )}
               <Checkbox
                 className="mt-1"
                 onChange={(e) => {
@@ -352,7 +365,7 @@ const HouseSettings = () => {
                 Negotiable
               </Checkbox>
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallerScreen ? 24 : 12} className="flex flex-col">
               <label>Maximum people allowed</label>
               <Select
                 options={countOptions}
@@ -363,6 +376,11 @@ const HouseSettings = () => {
                 placeholder="How many people are allowed to live?"
                 value={watch("count")}
               />
+              {basicInfoErrors.count && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.count.message}
+                </Text>
+              )}
             </Col>
           </Row>
           {!isEmptyObject(basicInfoErrors) && (
@@ -378,14 +396,14 @@ const HouseSettings = () => {
       label: "Media",
       icon: <PictureOutlined />,
       children: (
-        <Row className="w-full" justify={"center"}>
-          <Col span={11}>
+        <Row className="w-full" gutter={[5, 5]} justify={"center"}>
+          <Col span={isSmallScreen ? 24 : 11}>
             <div className="w-full flex flex-col justify-center items-center">
-              <Title level={4}>Uploaded Files</Title>
+              <Title level={4}>Uploaded Media</Title>
               <List
                 itemLayout="horizontal"
                 className="w-full"
-                dataSource={files} // The file paths fetched from the database
+                dataSource={files}
                 renderItem={(file) => (
                   <List.Item
                     actions={[
@@ -421,14 +439,14 @@ const HouseSettings = () => {
               />
             </div>
           </Col>
-          <Col span={1}>
+          <Col span={isSmallScreen ? 24 : 1}>
             <Divider
               style={{ borderColor: "#7cb305" }}
-              type="vertical"
-              className="h-full"
+              type={isSmallScreen ? `horizontal` : `vertical`}
+              className={isSmallScreen ? "!w-full" : "h-full"}
             />
           </Col>
-          <Col span={11}>
+          <Col span={isSmallScreen ? 24 : 12}>
             <div className="w-full flex flex-col justify-center items-center">
               <Title level={4}>Add New Files</Title>
               <FileUploader
@@ -449,7 +467,7 @@ const HouseSettings = () => {
     {
       key: 3,
       label: "Location",
-      // icon: <FaMapPin className="align-middle" />,
+      icon: <EnvironmentOutlined className="align-middle" />,
       children: (
         <Flex vertical className="p-5" justify="center" align="center" gap={10}>
           <Text>Where is your rent house located?</Text>
@@ -477,12 +495,30 @@ const HouseSettings = () => {
       ),
     },
     {
-      key: "4",
+      key: 4,
+      label: "Availability",
+      icon: <CheckCircleOutlined />,
+      children: (
+        <Flex vertical align="center" justify="center" gap={10}>
+          <Text className="text-lg">Is this house available for rent now?</Text>
+          <Switch
+            checked={isAvailable}
+            checkedChildren="Yes"
+            unCheckedChildren="No"
+            onChange={(val) => {
+              setIsAvailable(val);
+            }}
+          />
+        </Flex>
+      ),
+    },
+    {
+      key: 5,
       label: "Finish",
       icon: <SaveOutlined />,
       children: (
         <Flex vertical align="center" justify="center" gap={10}>
-          <Text>You have made updates,</Text>
+          <Text>Click Save to Finish.</Text>
           <Button
             type="primary"
             onClick={() => {
@@ -505,7 +541,6 @@ const HouseSettings = () => {
         }}
         items={tabItems}
         className="w-full"
-        tabBarStyle={{textAlign:'center'}}
       />
       <Modal
         open={isMapOpen}

@@ -4,6 +4,10 @@ import {
   getChatInstanceByUsersAndHouseId,
   getHouseById,
   getHousesBySubcity,
+  getRatingByHouseAndUserId,
+  getRatingByHouseId,
+  rate,
+  rateHouse,
 } from "../../services/api";
 import { useEffect, useState } from "react";
 import { DataLoader } from "../../pages/common/data-loader";
@@ -16,7 +20,9 @@ import {
   Flex,
   Grid,
   Modal,
+  notification,
   Pagination,
+  Rate,
   Row,
   Space,
   Typography,
@@ -197,8 +203,47 @@ const RentHouse = () => {
       });
   };
 
+  const [rateStatus, setRateStatus] = useState();
+  const [rating, setRating] = useState(0);
+
   useEffect(() => {
     session?._id && house && checkChatStatus();
+  }, [session, house]);
+  console.log("hose", house);
+
+  const getUserRatingsForThisHouse = () => {
+    getRatingByHouseAndUserId(house?._id, session?._id)
+      .then((res) => {
+        if (res?.data?.length > 0) {
+          setRateStatus("exists");
+          setRating(res?.data[0]?.value);
+        } else {
+          setRateStatus("none");
+        }
+      })
+      .catch((err) => {
+        setRateStatus("error");
+      });
+  };
+
+  const onRate = (v) => {
+    rateHouse({
+      houseId: id,
+      ownerId: house?.ownerId?._id,
+      userId: session?._id,
+      value: v,
+      rateExists: rateStatus === "exists",
+    })
+      .then((res) => {
+        getUserRatingsForThisHouse();
+      })
+      .catch((err) => {
+        notification.error({ message: "Cannot rate house" });
+      });
+  };
+
+  useEffect(() => {
+    session && house && getUserRatingsForThisHouse();
   }, [session, house]);
 
   return (
@@ -210,8 +255,10 @@ const RentHouse = () => {
       ) : (
         <Row className="w-full" gutter={5}>
           <Col span={12} className="flex flex-col justify-center items-center">
-            <Link className="w-full" to={'/me/rent'}>
-              <Button type="link" icon={<ArrowLeftOutlined />}>All Houses</Button>
+            <Link className="w-full" to={"/me/rent"}>
+              <Button type="link" icon={<ArrowLeftOutlined />}>
+                All Houses
+              </Button>
             </Link>
             <Title level={4}>House Details</Title>
             <Title level={5} className="w-full">
@@ -236,7 +283,17 @@ const RentHouse = () => {
               Owner Info
             </Title>
             <Descriptions items={ownerInfo} column={2} />
-            <Space className="mt-10">
+            <div className="mx-auto mt-3 flex flex-col gap-2 items-center justify-center">
+              <Text className="text-lg">Rate this house</Text>
+              {rateStatus === "checking" ? (
+                <DataLoader />
+              ) : rateStatus === "error" ? (
+                "error"
+              ) : (
+                <Rate value={rating} onChange={onRate} allowHalf allowClear />
+              )}
+            </div>
+            <Space className="mt-5">
               {chatStatus === "exists" ? (
                 <Flex align="center" justify="center" vertical>
                   <Text className="font-bold">

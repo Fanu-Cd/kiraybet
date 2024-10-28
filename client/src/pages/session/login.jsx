@@ -12,6 +12,7 @@ import {
   Button,
   Divider,
   message,
+  notification,
 } from "antd";
 import useWindowSize from "../../hooks/useWindowSize";
 import { Link, useNavigate } from "react-router-dom";
@@ -21,7 +22,7 @@ const Login = () => {
   const { Title, Text } = Typography;
   const router = useNavigate();
   const loginSchema = Yup.object().shape({
-    email: Yup.string().required("Email is required"),
+    email: Yup.string().email().required("Email is required"),
     pass: Yup.string()
       .required("Password is required")
       .min(8, "Password must be at least 8 characters long"),
@@ -30,7 +31,6 @@ const Login = () => {
   const {
     handleSubmit,
     setValue,
-    getValues,
     reset,
     formState: { errors, isValid },
   } = useForm({
@@ -44,20 +44,27 @@ const Login = () => {
   const saveAndRedirectUser = (data) => {
     localStorage.setItem("userId", data.data._id);
     if (data?.data?.accountType === "tenant") {
-      return router("/me");
+      return router("/me/rent");
     }
-    return router("/owner");
+    return router("/owner/my-houses");
   };
 
   const onSubmit = (data) => {
     login(data)
       .then((res) => {
         message.success("Success!");
-        // reset();
+        notification.success({
+          message: "Success",
+          description: "Successfully logged in",
+        });
+        reset();
         saveAndRedirectUser(res);
       })
       .catch((err) => {
-        message.error("Some Error Occurred!");
+        notification.error({
+          message: "Error",
+          description: "Incorrect Credential or Server Error",
+        });
       });
   };
 

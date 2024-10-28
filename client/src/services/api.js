@@ -40,6 +40,29 @@ export const getUserSession = (id) => {
     });
 };
 
+export const getUserByEmail = (email) => {
+  return fetch(`${apiUrl}/users/get-by-email/${email}`)
+    .then((res) => res.json())
+    .catch((err) => console.log("err", err));
+};
+
+export const getUserByPhone = (phone) => {
+  return fetch(`${apiUrl}/users/get-by-phone/${phone}`)
+    .then((res) => res.json())
+    .catch((err) => console.log("err", err));
+};
+
+export const sendVerificationCodeViaEmail = (email, code) => {
+  return fetch(`${apiUrl}/users/send-verification-email/${email}`, {
+    method: "POST",
+    body: JSON.stringify({ code }),
+    headers: { "Content-Type": "application/json" },
+  })
+    .then((res) => res.json())
+    .catch((err) => console.log("err", err));
+};
+
+//////////////////////////////////////////
 export const createNewRentHouse = (body) => {
   return fetch(`${apiUrl}/rent-house/create-new`, {
     method: "POST",
@@ -106,7 +129,7 @@ export const createNewChatInstance = (body) => {
     .then((res) => res.json());
 };
 
-export const getAllChatInstances = (id) => {
+export const getAllChatInstances = () => {
   return fetch(`${apiUrl}/chat-instance/get-all`)
     .then((res) => res)
     .then((res) => res.json());
@@ -187,7 +210,8 @@ export const getChatMessageById = (id) => {
 export const updateChatMessageById = (id, data) => {
   return fetch(`${apiUrl}/chat-message/update/${id}`, {
     method: "PUT",
-    body: data,
+    body: JSON.stringify(data),
+    headers: { "Content-Type": "application/json" },
   }).then((res) => res);
 };
 
@@ -198,6 +222,12 @@ export const deleteChatMessageById = (id) => {
 };
 
 //
+
+export const getAllSavedHouses = () => {
+  return fetch(`${apiUrl}/saved-house/get-all`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
 
 export const getSavedHouseByUserId = (id) => {
   return fetch(`${apiUrl}/saved-house/get-by-user-id/${id}`)
@@ -227,4 +257,81 @@ export const removeSavedHouseById = (id) => {
   return fetch(`${apiUrl}/saved-house/delete/${id}`, {
     method: "DELETE",
   }).then((res) => res);
+};
+
+export const getOwnerStat = (ownerId) => {
+  return fetch(
+    `${apiUrl}/rent-house/get-rent-house-statistics-by-ownerId/${ownerId}`
+  )
+    .then((res) => res)
+    .then((res) => res.json());
+};
+//////////////////////////////////
+
+export const getAllRatings = () => {
+  return fetch(`${apiUrl}/rating/get-all`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const rateHouse = (body) => {
+  return fetch(`${apiUrl}/rating/create-new`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  })
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getRatingByHouseId = (houseId) => {
+  return fetch(`${apiUrl}/rating/get-by-house-id/${houseId}`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getRatingByHouseAndUserId = (houseId, userId) => {
+  return fetch(`${apiUrl}/rating/get-by-house-and-user-id/${houseId}/${userId}`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getRatingByOwnerId = (ownerId) => {
+  return fetch(`${apiUrl}/rating/get-by-owner-id/${ownerId}`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getRatingByHouseAndOwnerId = (houseId, ownerId) => {
+  return fetch(
+    `${apiUrl}/rating/get-by-house-and-owner-id/${houseId}/${ownerId}`
+  )
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getAllComplaints = () => {
+  return fetch(`${apiUrl}/complaint/get-all`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getComplaintsByHouseId = (houseId) => {
+  return fetch(`${apiUrl}/complaint/get-by-house-id/${houseId}`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getComplaintsByOwnerId = (ownerId) => {
+  return fetch(`${apiUrl}/complaint/get-by-owner-id/${ownerId}`)
+    .then((res) => res)
+    .then((res) => res.json());
+};
+
+export const getComplaintsByHouseAndOwnerId = (houseId, ownerId) => {
+  return fetch(
+    `${apiUrl}/complaint/get-by-house-and-owner-id/${houseId}/${ownerId}`
+  )
+    .then((res) => res)
+    .then((res) => res.json());
 };

@@ -14,7 +14,7 @@ const LanguageProvider = ({ children }) => {
 
   return (
     <LanguageContext.Provider value={{ language, changeLanguage }}>
-      {children}
+      <div className="flex-grow">{children}</div>
     </LanguageContext.Provider>
   );
 };

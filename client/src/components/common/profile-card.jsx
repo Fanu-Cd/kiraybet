@@ -1,16 +1,27 @@
-import { DownOutlined } from "@ant-design/icons";
+import {
+  AccountBookOutlined,
+  DownOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import { Avatar, Button, Dropdown, message, Space, Typography } from "antd";
-import { IoPersonCircle } from "react-icons/io5";
+import {
+  IoPersonCircle,
+  IoPersonCircleOutline,
+  IoPersonOutline,
+} from "react-icons/io5";
 import { HomeIllustration } from "../../assets/icons/home-illustration";
 import { IoSettings } from "react-icons/io5";
 import { IoLogOut } from "react-icons/io5";
+import useWindowSize from "../../hooks/useWindowSize";
 
 const { Text } = Typography;
-const ProfileCard = ({ userData }) => {
-  const onClick = ({ key }) => {
-    message.info(`Click on item ${key}`);
+const ProfileCard = ({ userData, logout }) => {
+  const onClick = ({ key, l }) => {
+    if (Number(3) === 3) logout();
   };
 
+  const { width } = useWindowSize();
+  const isSmallerScreen = width < 600;
   const items = [
     {
       label: "My Profile",
@@ -31,10 +42,10 @@ const ProfileCard = ({ userData }) => {
 
   return (
     <Dropdown menu={{ items, onClick }}>
-      <Button onClick={(e) => e.preventDefault()} className="h-[3rem]">
+      <Button onClick={(e) => e.preventDefault()} className="h-[2.5rem]">
         <Space>
-          <Text>{userData?.fname}</Text>
-          <Avatar src={<HomeIllustration />} />
+          {!isSmallerScreen && <Text>{userData?.fname}</Text>}
+          <Avatar icon={<UserOutlined />} />
           <DownOutlined />
         </Space>
       </Button>

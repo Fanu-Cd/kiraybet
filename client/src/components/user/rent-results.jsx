@@ -23,6 +23,7 @@ import {
 } from "@ant-design/icons";
 import {
   getAllHouses,
+  getRatingByHouseId,
   getSavedHouseByUserAndHouseId,
   saveNewHouse,
 } from "../../services/api";
@@ -47,15 +48,32 @@ const RentResults = () => {
   const { width } = useWindowSize();
   const isSmallScreen = width < 640;
   const [homes, setHomes] = useState([]);
+  const [initData, setInitData] = useState([]);
+
   const [housesData, setHousesData] = useState([]);
   const [currentData, setCurrentData] = useState([]);
   const { t } = useTranslation();
 
-  const getFinalHousesList = (data) => {
-    const houses = data.map((item, index) => {
-      const { _id, title, price, mediaFilePath, location, isNegotiable } = item;
+  const getFinalHousesList = (data, sortBy) => {
+    setInitData(data);
+    const finalData = sortBy
+      ? sortBy === "oldest"
+        ? data.sort((a, b) => new Date(a.createdAt) - new Date(b.createdAt))
+        : data.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+      : data;
+    const houses = finalData.map((item, index) => {
+      const {
+        _id,
+        title,
+        price,
+        mediaFilePath,
+        location,
+        isNegotiable,
+        rating,
+      } = item;
       return {
         _id,
+        rating,
         key: index,
         title,
         price,
@@ -164,6 +182,14 @@ const RentResults = () => {
     getFinalHousesList(filteredHouses);
   };
 
+  useEffect(() => {
+    filterHouses();
+  }, [filters]);
+
+  useEffect(() => {
+    getFinalHousesList(initData, sortBy);
+  }, [sortBy]);
+
   const [houseSaveStatus, setHouseSaveStatus] = useState("checking");
   const checkHouseSaveStatus = (houseId) => {
     getSavedHouseByUserAndHouseId(session?._id, houseId)
@@ -222,18 +248,14 @@ const RentResults = () => {
             </Text>
             <Flex align="center" justify="end" className="min-w-[60%]" gap={3}>
               <Text className="text-sm">{t("sort")} : </Text>
-              <Select style={{ width: "60%" }} value={sortBy}>
-                {sortOptions.map((item) => (
-                  <Select.Option
-                    onChange={(val) => {
-                      setSortBy(val);
-                    }}
-                    value={item.value}
-                  >
-                    {item.label}
-                  </Select.Option>
-                ))}
-              </Select>
+              <Select
+                onChange={(val) => {
+                  setSortBy(val);
+                }}
+                style={{ width: "60%" }}
+                value={sortBy}
+                options={sortOptions}
+              />
             </Flex>
           </div>
           <div className="mt-1">
@@ -246,7 +268,7 @@ const RentResults = () => {
             ) : currentData?.length > 0 ? (
               <Row gutter={[5, 5]} className="mt-3">
                 {[...currentData].map((house) => (
-                  <Col sm={12} md={6} key={house.key}>
+                  <Col sm={12} lg={6} key={house.key}>
                     <Card1
                       data={house}
                       menuItems={[
@@ -283,6 +305,8 @@ const RentResults = () => {
                       onOpenDropDown={() => {
                         checkHouseSaveStatus(house?._id);
                       }}
+                      withRating
+                      rating={house?.rating}
                     />
                   </Col>
                 ))}

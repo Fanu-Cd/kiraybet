@@ -2,6 +2,26 @@
 @tailwind components;
 @tailwind utilities;
 
+* {
+  box-sizing: border-box;
+}
+
 body {
-  margin: 0;
+  min-width: 400px; /* Suitable for mobile screens */
+}
+
+/* @media (min-width: 768px) {
+  body {
+    min-width: 768px; /* For tablets and up */
+  /* } */
+/* } */
+
+/* @media (min-width: 1024px) {
+  body {
+    min-width: 1024px; /* For desktops and up */
+  /* } */
+/* } */ */ */
+
+.wordmark_text{
+  
 }

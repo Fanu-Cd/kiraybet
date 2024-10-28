@@ -1,12 +1,9 @@
 import { Flex } from "antd";
-import { Typography } from "antd";
-import { HomeIllustration } from "../../assets/icons/home-illustration";
+import logo from "../../assets/logo.png";
 const WordMark = () => {
-  const { Text } = Typography;
   return (
-    <Flex gap={2} className="" align="center">
-      <HomeIllustration />
-      <Text className="font-bold">Kiray bet</Text>
+    <Flex className="" align="center">
+      <img src={logo} alt="logo" width={"120px"} height={"120px"} />
     </Flex>
   );
 };

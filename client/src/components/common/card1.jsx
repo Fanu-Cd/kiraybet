@@ -1,7 +1,16 @@
-import { Button, Card, Dropdown, Flex, Image, Tag, Typography } from "antd";
+import {
+  Button,
+  Card,
+  Dropdown,
+  Flex,
+  Image,
+  Rate,
+  Tag,
+  Typography,
+} from "antd";
 import { FaEllipsisV } from "react-icons/fa";
 
-const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
+const Card1 = ({ data, menuItems, onOpenDropDown, withRating, rating }) => {
   const { title, src, location } = data;
   const { Text } = Typography;
   const onClick = () => {};
@@ -31,7 +40,10 @@ const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
               </Text>
             </div>
             <div>
-              <Dropdown onOpenChange={onOpenDropDown} menu={{ items: menuItems, onClick }}>
+              <Dropdown
+                onOpenChange={onOpenDropDown}
+                menu={{ items: menuItems, onClick }}
+              >
                 <Button
                   onClick={(e) => e.preventDefault()}
                   className="h-[3rem] border-none"
@@ -41,6 +53,16 @@ const Card1 = ({ data, menuItems ,onOpenDropDown}) => {
               </Dropdown>
             </div>
           </div>
+          {withRating && (
+            <div className="mt-2">
+              <Rate
+                disabled
+                value={rating || 0}
+                allowHalf
+                className="text-sm"
+              />
+            </div>
+          )}
         </Flex>
       </Card>
     </div>

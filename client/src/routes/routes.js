@@ -12,7 +12,7 @@ import Rent from "../pages/user/rent";
 import OwnerLayout from "../pages/owner/layout";
 import OwnerDashboard from "../pages/owner/dashboard";
 import { MyHouses as OwnerHouses } from "../pages/owner/my-houses";
-import Discover from "../pages/owner/discover";
+// import Discover from "../pages/owner/discover";
 import NewHouse from "../pages/owner/new-house";
 import SignUp from "../pages/session/signup";
 import HouseSettings from "../pages/owner/house-settings";
@@ -157,13 +157,31 @@ export const routes = (userType) => {
             </Suspense>
           ),
         },
+        // {
+        //   path: "discover",
+        //   element: (
+        //     <Suspense fallback={<Loader />}>
+        //       <Discover />
+        //     </Suspense>
+        //   ),
+        // },
         {
-          path: "discover",
+          path: "chats",
           element: (
             <Suspense fallback={<Loader />}>
-              <Discover />
+              <Chats />
             </Suspense>
           ),
+          children: [
+            {
+              path: ":id",
+              element: (
+                <Suspense fallback={<Loader />}>
+                  <Chat />
+                </Suspense>
+              ),
+            },
+          ],
         },
       ],
     },

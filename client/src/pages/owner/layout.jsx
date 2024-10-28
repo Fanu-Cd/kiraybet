@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   DashboardFilled,
   DashboardOutlined,
   HomeOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
+  MessageOutlined,
   SearchOutlined,
   UploadOutlined,
   UserOutlined,
@@ -17,18 +18,16 @@ import WordMark from "../../components/common/word-mark";
 import { Outlet } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import { useSession } from "../../context/session-provider";
+import { IoMailOpenOutline } from "react-icons/io5";
+import useWindowSize from "../../hooks/useWindowSize";
 const { Header, Sider, Content } = Layout;
 const { Text } = Typography;
 const OwnerLayout = () => {
   const router = useNavigate();
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
   const {
     token: { colorBgContainer, borderRadiusLG },
   } = theme.useToken();
-
-  const links = [
-    { title: "", component: <WordMark />, isComponent: true, to: "/" },
-  ];
 
   const navItems = [
     {
@@ -48,22 +47,57 @@ const OwnerLayout = () => {
       },
     },
     {
-      key: "2",
-      icon: <SearchOutlined />,
-      label: "Discover",
+      key: "3",
+      icon: <MessageOutlined />,
+      label: "Chats",
       onClick: () => {
-        router("./discover");
+        router("./chats");
       },
     },
+    // {
+    //   key: "4",
+    //   icon: <SearchOutlined />,
+    //   label: "Discover",
+    //   onClick: () => {
+    //     router("./discover");
+    //   },
+    // },
   ];
 
   const [selectedKey, setSelectedKey] = useState(["0"]);
 
   const { session, setSession } = useSession();
+  const onLogout = () => {
+    localStorage.removeItem("userId");
+    setSession(null);
+    router("/");
+  };
+
+  const getMenuItemByUrl = () => {
+    if (window.location.pathname.includes("/owner/my-houses")) {
+      return "My Houses";
+    }
+    if (window.location.pathname.includes("/owner/dashboard")) {
+      return "Dashboard";
+    }
+    // if (window.location.pathname.includes("/owner/discover")) {
+    //   return "Discover";
+    // }
+    if (window.location.pathname.includes("/owner/chats")) {
+      return "Chats";
+    }
+    return null;
+  };
+  const { width } = useWindowSize();
+  const isSmallScreen = width < 800;
+
+  useEffect(() => {
+    setCollapsed(true);
+  }, [isSmallScreen]);
 
   return (
     <div className="w-[98%] my-2 mx-auto h-auto">
-      <Navbar links={links} withProfileCard={true} session={session} />
+      <Navbar withProfileCard={true} session={session} logout={onLogout} />
       <Layout className="mt-2">
         <Sider
           className="!bg-white border h-[calc(100vh-7rem)]"
@@ -90,7 +124,9 @@ const OwnerLayout = () => {
               background: colorBgContainer,
               height: 40,
             }}
-            className="flex justify-between items-center"
+            className={`${
+              isSmallScreen && `hidden`
+            } md:flex justify-between items-center`}
           >
             <Button
               type="text"
@@ -103,14 +139,14 @@ const OwnerLayout = () => {
               }}
             />
 
-            <Text>{navItems[selectedKey].label}</Text>
+            <Text>{getMenuItemByUrl() || navItems[selectedKey].label}</Text>
             <Text></Text>
           </Header>
 
           <Content
             style={{
               margin: "5px 24px 0 16px",
-              padding: 24,
+              padding: 12,
               minHeight: 280,
               background: colorBgContainer,
               borderRadius: borderRadiusLG,

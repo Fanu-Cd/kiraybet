@@ -6,7 +6,6 @@ import {
 import {
   Button,
   Col,
-  Grid,
   Row,
   Select,
   Steps,
@@ -16,10 +15,10 @@ import {
   Flex,
   Input,
   InputNumber,
-  Divider,
   Modal,
   Spin,
   Checkbox,
+  notification,
 } from "antd";
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -33,6 +32,7 @@ import MapLocator from "../../components/common/map-locator";
 import { useSession } from "../../context/session-provider";
 import { createNewRentHouse } from "../../services/api";
 import { useNavigate } from "react-router-dom";
+import useWindowSize from "../../hooks/useWindowSize";
 const NewHouse = () => {
   const router = useNavigate();
   const { t } = useTranslation();
@@ -41,12 +41,14 @@ const NewHouse = () => {
   const [current, setCurrent] = useState(0);
 
   const basicInfoValidationSchema = Yup.object().shape({
-    name: Yup.string().required("Name is required"),
+    name: Yup.string()
+      .required("Name is required")
+      .min(5, "Please Enter at least 5 characters"),
     size: Yup.string().required("Size is required"),
     type: Yup.string().required("Type is required"),
     price: Yup.number().required("Price is required"),
     beds: Yup.string().required("Beds is required"),
-    count: Yup.string().required("Count is required"),
+    count: Yup.string().required("Amount of People is required"),
   });
 
   const {
@@ -54,11 +56,19 @@ const NewHouse = () => {
     setValue: setBasicInfoValue,
     getValues,
     reset: resetBasicInfo,
+    watch,
     formState: { errors: basicInfoErrors, isValid: isBasicInfoValid },
   } = useForm({
     resolver: yupResolver(basicInfoValidationSchema),
     mode: "onChange",
   });
+
+  const watchName = watch("name");
+  const watchBeds = watch("beds");
+  const watchPrice = watch("price");
+  const watchType = watch("type");
+  const watchSize = watch("size");
+  const watchCount = watch("count");
 
   useEffect(() => {
     if (Object.keys(getValues()).length > 0) setBasicInput(getValues());
@@ -137,14 +147,18 @@ const NewHouse = () => {
   const [isUploadError, setIsUploadError] = useState(false);
   const [isMapOpen, setIsMapOpen] = useState(false);
   const [isViewFileModalOpen, setIsViewFileModalOpen] = useState(false);
+  const { width } = useWindowSize();
+  const isSmallScreen = width < 1000;
+  const isSmallerScreen = width < 600;
+  const isSmallestScreen = width < 400;
 
   const steps = [
     {
       title: "Basic Details",
       content: (
-        <Flex vertical className="p-5 h-[15rem]">
+        <Flex vertical className="p-5 min-h-[15rem]">
           <Row className="w-full h-full" gutter={[10, 10]}>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Title</label>
               <Input
                 onChange={(e) => {
@@ -152,9 +166,15 @@ const NewHouse = () => {
                 }}
                 status={`${basicInfoErrors.name ? `error` : ``}`}
                 placeholder="Give your house some title"
+                value={watchName}
               />
+              {basicInfoErrors.name && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.name.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Type</label>
               <Select
                 options={typeOptions}
@@ -163,9 +183,15 @@ const NewHouse = () => {
                 }}
                 status={`${basicInfoErrors.type ? `error` : ``}`}
                 placeholder="Is your house a studio or apartment"
+                value={watchType}
               />
+              {basicInfoErrors.type && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.type.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Size</label>
               <Select
                 options={sizeOptions}
@@ -174,9 +200,15 @@ const NewHouse = () => {
                 }}
                 status={`${basicInfoErrors.size ? `error` : ``}`}
                 placeholder="What is the size of your house?"
+                value={watchSize}
               />
+              {basicInfoErrors.size && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.size.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Beds</label>
               <Select
                 options={bedOptions}
@@ -185,9 +217,15 @@ const NewHouse = () => {
                 }}
                 status={`${basicInfoErrors.beds ? `error` : ``}`}
                 placeholder="How many beds does your house have?"
+                value={watchBeds}
               />
+              {basicInfoErrors.beds && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.beds.message}
+                </Text>
+              )}
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Price (ETB)</label>
               <InputNumber
                 min={1}
@@ -197,7 +235,13 @@ const NewHouse = () => {
                 }}
                 className="w-full"
                 placeholder="What is payment expected for the rent?"
+                value={watchPrice}
               />
+              {basicInfoErrors.price && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.price.message}
+                </Text>
+              )}
               <Checkbox
                 className="mt-1"
                 onChange={(e) => {
@@ -212,7 +256,7 @@ const NewHouse = () => {
                 Negotiable
               </Checkbox>
             </Col>
-            <Col span={12} className="flex flex-col">
+            <Col span={isSmallScreen ? 24 : 12} className="flex flex-col">
               <label>Maximum people allowed</label>
               <Select
                 options={countOptions}
@@ -221,14 +265,15 @@ const NewHouse = () => {
                 }}
                 status={`${basicInfoErrors.count ? `error` : ``}`}
                 placeholder="How many people are allowed to live?"
+                value={watchCount}
               />
+              {basicInfoErrors.count && (
+                <Text className="text-red-500 text-xs">
+                  {basicInfoErrors.count.message}
+                </Text>
+              )}
             </Col>
           </Row>
-          {!isEmptyObject(basicInfoErrors) && (
-            <Text className="text-center mt-2" type="danger">
-              Please fill the specified inputs.
-            </Text>
-          )}
         </Flex>
       ),
     },
@@ -269,7 +314,7 @@ const NewHouse = () => {
           align="center"
           gap={10}
         >
-          <Text>Where is your rent house located?</Text>
+          <Text className="text-center">Where is your rent house located?</Text>
           <Button
             type="primary"
             icon={<FaMapMarkerAlt />}
@@ -277,7 +322,7 @@ const NewHouse = () => {
               setIsMapOpen(true);
             }}
           >
-            Select on Map
+            Map
           </Button>
           {location && (
             <Text className="text-center text-sm">
@@ -286,7 +331,7 @@ const NewHouse = () => {
             </Text>
           )}
           {locationError && (
-            <Text className="text-center text-sm text-red">
+            <Text className="text-center text-sm text-red-600">
               Location is required
             </Text>
           )}
@@ -301,30 +346,30 @@ const NewHouse = () => {
           <Flex vertical className="p-5">
             <Title level={5}>Basic Details</Title>
             <Row className="w-full h-full" gutter={[10, 10]}>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Title</label>
                 <Text>{basicInput.name}</Text>
               </Col>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Type</label>
                 <Text>{basicInput.type}</Text>
               </Col>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Size</label>
                 <Text>{basicInput.size}</Text>
               </Col>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Beds</label>
                 <Text>{basicInput.beds}</Text>
               </Col>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Price (ETB)</label>
                 <Text>
                   {basicInput.price} ({" "}
                   {basicInput.isNegotiable ? "Negotiable" : "Fixed"} )
                 </Text>
               </Col>
-              <Col span={12} className="flex flex-col">
+              <Col span={isSmallestScreen ? 24 : 12} className="flex flex-col">
                 <label>Maximum people allowed</label>
                 <Text>{basicInput.count}</Text>
               </Col>
@@ -336,8 +381,8 @@ const NewHouse = () => {
             <Row>
               {fileList.map((file) => (
                 <>
-                  <Col span={12}>{file.name}</Col>
-                  <Col span={12}>
+                  <Col span={isSmallestScreen ? 24 : 12}>{file.name}</Col>
+                  <Col span={isSmallestScreen ? 24 : 12}>
                     <Button
                       icon={<EyeOutlined />}
                       type="text"
@@ -357,16 +402,16 @@ const NewHouse = () => {
               Location
             </Title>
             <Row>
-              <Col span={12}>Latitude</Col>
-              <Col span={12}>
+              <Col span={isSmallestScreen ? 24 : 12}>Latitude</Col>
+              <Col span={isSmallestScreen ? 24 : 12}>
                 <Text>{location?.geometry?.coordinates[0]?.toFixed(3)}</Text>
               </Col>
-              <Col span={12}>Longitude</Col>
-              <Col span={12}>
+              <Col span={isSmallestScreen ? 24 : 12}>Longitude</Col>
+              <Col span={isSmallestScreen ? 24 : 12}>
                 <Text>{location?.geometry?.coordinates[1]?.toFixed(3)}</Text>
               </Col>
-              <Col span={12}>Place</Col>
-              <Col span={12}>
+              <Col span={isSmallestScreen ? 24 : 12}>Place</Col>
+              <Col span={isSmallestScreen ? 24 : 12}>
                 <Text>{location?.text}</Text>
               </Col>
             </Row>
@@ -379,8 +424,6 @@ const NewHouse = () => {
   const items = steps.map((item) => ({ key: item.title, title: item.title }));
   const [selectedFile, setSeletedFile] = useState(null);
   const contentStyle = {
-    // lineHeight: "2120px",
-    // textAlign: "center",
     color: token.colorTextTertiary,
     backgroundColor: token.colorFillAlter,
     borderRadius: token.borderRadiusLG,
@@ -396,7 +439,10 @@ const NewHouse = () => {
     formData.append("title", data.name);
     formData.append("price", data.price);
     formData.append("beds", data.beds);
-    formData.append("isNegotiable", data.isNegotiable);
+    formData.append(
+      "isNegotiable",
+      data.isNegotiable !== undefined ? data.isNegotiable : false
+    );
     formData.append("maxPeople", data.count);
     formData.append("size", data.size);
     formData.append("type", data.type);
@@ -410,7 +456,7 @@ const NewHouse = () => {
     );
     formData.append("ownerId", session?._id);
     fileList.forEach((file) => {
-      formData.append("files", file.originFileObj); // Append the actual file (originFileObj) to FormData
+      formData.append("files", file.originFileObj);
     });
     return formData;
   };
@@ -419,7 +465,10 @@ const NewHouse = () => {
     const data = getFinalData();
     createNewRentHouse(data)
       .then((res) => {
-        message.success("House Successfully posted!");
+        notification.success({
+          message: "House Successfully Added!",
+          description: "Your house is posted!",
+        });
         reset();
         router("/owner/my-houses");
       })
@@ -442,7 +491,9 @@ const NewHouse = () => {
         </Button>
       </Link>
       <Text className="text-lg block text-center">Post New House</Text>
-      <div className="w-[80%] mx-auto mt-5">
+      <div
+        className={`${isSmallerScreen ? `w-[100%]` : `w-[80%]`} mx-auto mt-5`}
+      >
         <form>
           <>
             <Steps current={current} items={items} />
@@ -473,7 +524,10 @@ const NewHouse = () => {
                 </Button>
               )}
               {current > 0 && (
-                <Button style={{ margin: "0 8px" }} onClick={() => prev()}>
+                <Button
+                  className={`${isSmallestScreen ? `!mt-2 mx-0` : `ms-2`}`}
+                  onClick={() => prev()}
+                >
                   Previous
                 </Button>
               )}

@@ -15,25 +15,37 @@ import {
   Space,
   Checkbox,
   message,
+  notification,
 } from "antd";
 import { ArrowRightOutlined } from "@ant-design/icons";
-import { IoArrowBackOutline } from "react-icons/io5";
 import useWindowSize from "../../hooks/useWindowSize";
-import ReCAPTCHA from "react-google-recaptcha";
-import { createNewAccount, verifyRecaptcha } from "../../services/api";
-import { Link } from "react-router-dom";
-
+import {
+  createNewAccount,
+  getUserByEmail,
+  getUserByPhone,
+  sendVerificationCodeViaEmail,
+} from "../../services/api";
+import { Link, useNavigate } from "react-router-dom";
 const SignUp = () => {
+  const router = useNavigate();
   const { Title, Text } = Typography;
-  const tenantAccountSchema = Yup.object().shape({
+  const newAccountSchema = Yup.object().shape({
     fname: Yup.string().required("First Name is required"),
     lname: Yup.string().required("Last Name is required"),
-    email: Yup.string().required("Email is required"),
+    email: Yup.string().email("Invalid Email Format").nullable(),
     pnumber: Yup.string()
-      .required("Phone Number is required")
+      .nullable()
       .matches(
         /^[9|7]\d*$/,
         "Phone number must start with 9 or 7 and contain only digits"
+      )
+      .test(
+        "email-or-pnumber",
+        "Either email or phone number is required",
+        function (value) {
+          const { email } = this.parent;
+          return email || value;
+        }
       ),
     pass: Yup.string()
       .required("Password is required")
@@ -44,21 +56,20 @@ const SignUp = () => {
   });
 
   const {
-    handleSubmit: handleTenantAccountSubmit,
-    setValue: setTenantAccountValue,
-    getValues,
+    handleSubmit,
+    setValue,
     reset,
-    formState: { errors: tenantAccountErrors, isValid: isTenantAccountValid },
+    setError,
+    formState: { errors: newAccountErrors },
   } = useForm({
-    resolver: yupResolver(tenantAccountSchema),
+    resolver: yupResolver(newAccountSchema),
     mode: "onChange",
   });
 
   const [isAgreedToTerms, setIsAgreedToTerms] = useState(false);
-
   const [isAccountTypeSelected, setIsAccountTypeSelected] = useState(false);
   const [accountType, setAccountType] = useState("tenant");
-  const [accountOptions, setAccountOptions] = useState([
+  const accountOptions = [
     {
       label: "Tenant",
       value: "tenant",
@@ -67,9 +78,11 @@ const SignUp = () => {
       label: "House Owner",
       value: "house_owner",
     },
-  ]);
+  ];
   const { width } = useWindowSize();
   const isSmallScreen = width < 900;
+  const isSmallerScreen = width < 720;
+
 
   if (!isAccountTypeSelected) {
     return (
@@ -89,7 +102,7 @@ const SignUp = () => {
               setAccountType(val);
             }}
             options={accountOptions}
-            style={{ width: "50%" }}
+            style={{ width: `${isSmallScreen ? `80%` : `30%`}` }}
           />
           <Button
             type="primary"
@@ -105,34 +118,65 @@ const SignUp = () => {
     );
   }
 
-  const onTenantAccountSubmit = (data) => {
-    // console.log("here", data);
-    createNewAccount({ ...data, accountType: accountType })
+  const onSubmit = (data) => {
+    if (!validateInput(data)) {
+      return;
+    }
+    // if (data.email) {
+    //   sendEmailVerification(data.email,'code');
+    // }
+
+    createNewAccount({
+      ...data,
+      accountType: accountType,
+      pnumber: "0" + data.pnumber,
+    })
       .then((res) => {
-        message.success("Account Successfully Created!");
+        notification.success({
+          message: "Success",
+          description: "Account Successfully Created!",
+        });
         reset();
+        router("/session/login");
       })
       .catch((err) => {
         message.error("Some Error Occurred!");
       });
   };
-  // const [recaptchaStatus, setRecapthcaStatus] = useState("");
-  // const checkRecaptcha = (token) => {
-  //   setRecapthcaStatus("checking");
-  //   verifyRecaptcha(token)
+
+  const validateInput = async (data) => {
+    let isValid = true;
+    if (data.email) {
+      const res = await getUserByEmail(data.email);
+      if (res?.data) {
+        setError("email", { message: "Email is taken" });
+        isValid = false;
+      }
+    }
+    if (data.pnumber) {
+      const res = await getUserByPhone("0" + data.pnumber);
+      if (res?.data) {
+        setError("pnumber", { message: "Phone Number is taken" });
+        isValid = false;
+      }
+    }
+
+    return isValid;
+  };
+
+  // const sendEmailVerification = (email,code) => {
+  //   sendVerificationCodeViaEmail(email, code)
   //     .then((res) => {
-  //       console.log("res", res);
-  //       if (!res?.message === "Error") {
-  //         setRecapthcaStatus("success");
-  //         return;
-  //       }
-  //       setRecapthcaStatus("error");
+  //       message.success("Email sent,");
   //     })
   //     .catch((err) => {
-  //       setRecapthcaStatus("error");
-  //       console.log("error", err);
+  //       message.error("Some Error Occurred!");
   //     });
   // };
+
+  //  const sendOTP=(pnumber)=>{
+
+  //  }
 
   return (
     <Flex
@@ -162,119 +206,118 @@ const SignUp = () => {
         </Button>
       </Flex>
 
-      {/* {accountType === "tenant" ? ( */}
-        <Row className="w-full h-full" gutter={[4, 4]}>
-          <Col span={12} className="flex flex-col">
-            <label>First Name</label>
+      <Row className="w-full h-full" gutter={[4, 4]}>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>First Name</label>
+          <Input
+            onChange={(e) => {
+              setValue("fname", e.target.value);
+            }}
+            status={`${newAccountErrors.fname ? `error` : ``}`}
+            placeholder="Abebe"
+          />
+          {newAccountErrors.fname && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.fname.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>Last Name</label>
+          <Input
+            onChange={(e) => {
+              setValue("lname", e.target.value);
+            }}
+            status={`${newAccountErrors.lname ? `error` : ``}`}
+            placeholder="Bikila"
+          />
+          {newAccountErrors.lname && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.lname.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>Email</label>
+          <Input
+            onChange={(e) => {
+              setValue("email", e.target.value);
+            }}
+            status={`${newAccountErrors.email ? `error` : ``}`}
+            placeholder="abebe@gmail.com"
+          />
+          {newAccountErrors.email && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.email.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>Phone Number</label>
+          <Space.Compact>
+            <Input style={{ width: "20%" }} value="+251" disabled />
             <Input
               onChange={(e) => {
-                setTenantAccountValue("fname", e.target.value);
+                setValue("pnumber", e.target.value);
               }}
-              status={`${tenantAccountErrors.fname ? `error` : ``}`}
-              placeholder="Abebe"
+              status={`${newAccountErrors.pnumber ? `error` : ``}`}
+              style={{ width: "80%" }}
+              placeholder="912345678"
+              maxLength={9}
             />
-            {tenantAccountErrors.fname && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.fname.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={12} className="flex flex-col">
-            <label>Last Name</label>
-            <Input
-              onChange={(e) => {
-                setTenantAccountValue("lname", e.target.value);
+          </Space.Compact>
+          {newAccountErrors.pnumber && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.pnumber.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>Password</label>
+          <Input.Password
+            onChange={(e) => {
+              setValue("pass", e.target.value);
+            }}
+            status={`${newAccountErrors.pass ? `error` : ``}`}
+            placeholder="At least 8 characters long"
+          />
+          {newAccountErrors.pass && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.pass.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={`${isSmallerScreen?24:12}`} className="flex flex-col">
+          <label>Confirm Password</label>
+          <Input
+            onChange={(e) => {
+              setValue("cpass", e.target.value);
+            }}
+            status={`${newAccountErrors.cpass ? `error` : ``}`}
+            placeholder="At least 8 characters long"
+          />
+          {newAccountErrors.cpass && (
+            <Text className="text-red-500 text-xs">
+              {newAccountErrors.cpass.message}
+            </Text>
+          )}
+        </Col>
+        <Col span={24} className="mt-5">
+          <Flex vertical align="center" justify="center">
+            <Checkbox
+              onChange={(v) => {
+                setIsAgreedToTerms(!v.target.value);
               }}
-              status={`${tenantAccountErrors.lname ? `error` : ``}`}
-              placeholder="Bikila"
-            />
-            {tenantAccountErrors.lname && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.lname.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={12} className="flex flex-col">
-            <label>Email</label>
-            <Input
-              onChange={(e) => {
-                setTenantAccountValue("email", e.target.value);
-              }}
-              status={`${tenantAccountErrors.email ? `error` : ``}`}
-              placeholder="abebe@gmail.com"
-            />
-            {tenantAccountErrors.email && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.email.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={12} className="flex flex-col">
-            <label>Phone Number</label>
-            <Space.Compact>
-              <Input style={{ width: "20%" }} value="+251" disabled />
-              <Input
-                onChange={(e) => {
-                  setTenantAccountValue("pnumber", e.target.value);
-                }}
-                status={`${tenantAccountErrors.pnumber ? `error` : ``}`}
-                style={{ width: "80%" }}
-                placeholder="912345678"
-                maxLength={8}
-              />
-            </Space.Compact>
-            {tenantAccountErrors.pnumber && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.pnumber.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={12} className="flex flex-col">
-            <label>Password</label>
-            <Input.Password
-              onChange={(e) => {
-                setTenantAccountValue("pass", e.target.value);
-              }}
-              status={`${tenantAccountErrors.pass ? `error` : ``}`}
-              placeholder="At least 8 characters long"
-            />
-            {tenantAccountErrors.pass && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.pass.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={12} className="flex flex-col">
-            <label>Confirm Password</label>
-            <Input
-              onChange={(e) => {
-                setTenantAccountValue("cpass", e.target.value);
-              }}
-              status={`${tenantAccountErrors.cpass ? `error` : ``}`}
-              placeholder="At least 8 characters long"
-            />
-            {tenantAccountErrors.cpass && (
-              <Text className="text-red-500 text-xs">
-                {tenantAccountErrors.cpass.message}
-              </Text>
-            )}
-          </Col>
-          <Col span={24} className="mt-5">
-            <Flex vertical align="center" justify="center">
-              <Checkbox
-                onChange={(v) => {
-                  setIsAgreedToTerms(!v.target.value);
-                }}
-                value={isAgreedToTerms}
-              >
-                I agree to the{" "}
-                <a href="/terms" className="underline text-teal-400">
-                  terms and conditions
-                </a>
-                &nbsp;of the kiraybet pltform and Lorem ipsum dolor sit amet
-                consectetur adipisicing elit. Adipisci animi.
-              </Checkbox>
-              {/* <div className="my-2 w-[60%] flex flex-col justify-center">
+              value={isAgreedToTerms}
+            >
+              I agree to the{" "}
+              <a href="/terms" className="underline text-teal-400">
+                terms and conditions
+              </a>
+              &nbsp;of the kiraybet pltform and Lorem ipsum dolor sit amet
+              consectetur adipisicing elit. Adipisci animi.
+            </Checkbox>
+            {/* <div className="my-2 w-[60%] flex flex-col justify-center">
                 <ReCAPTCHA
                   sitekey={recaptchaKey}
                   onChange={(v) => {
@@ -292,25 +335,22 @@ const SignUp = () => {
                   </Text>
                 }
               </div> */}
-              <Button
-                type="primary"
-                className="mt-5"
-                disabled={!isAgreedToTerms}
-                onClick={handleTenantAccountSubmit(onTenantAccountSubmit)}
-              >
-                Create Account
-              </Button>
-              <Divider>Or</Divider>
-              <Text>Already have an account?</Text>
-              <Link to={"/session/login"}>
-                <Button className="mt-5 bg-teal-400 text-white">Log in</Button>
-              </Link>
-            </Flex>
-          </Col>
-        </Row>
-      {/* // ) : ( */}
-      {/* //   <div>owner account form</div> */}
-      {/* // )} */}
+            <Button
+              type="primary"
+              className="mt-5"
+              disabled={!isAgreedToTerms}
+              onClick={handleSubmit(onSubmit)}
+            >
+              Create Account
+            </Button>
+            <Divider>Or</Divider>
+            <Text>Already have an account?</Text>
+            <Link to={"/session/login"}>
+              <Button className="mt-5 bg-teal-400 text-white">Log in</Button>
+            </Link>
+          </Flex>
+        </Col>
+      </Row>
     </Flex>
   );
 };

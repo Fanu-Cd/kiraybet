@@ -6,9 +6,10 @@ const SessionProvider = ({ children }) => {
   const [session, setSession] = useState(null);
 
   useEffect(() => {
-    getCurrentSession().then((res) => {
-      setSession(res?.data);
-    });
+    localStorage.getItem("userId") &&
+      getCurrentSession().then((res) => {
+        setSession(res?.data);
+      });
   }, []);
 
   return (
